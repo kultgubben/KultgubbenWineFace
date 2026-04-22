@@ -76,18 +76,24 @@ New-Icon -name "bolt" -drawAction {
     $g.FillPolygon($brush, $pts)
 }
 
-# Body Battery — vertikalt batteri med bars (distinkt från horisontella battery-ikonen)
+# Body Battery — person-siluett med horisontella "laddnings-bars" över kroppen
 New-Icon -name "bodybattery" -drawAction {
     param($g, $brush, $pen)
-    $pen.Width = 2
-    # Vertikalt batteri-skal
-    $g.DrawRectangle($pen, 6, 3, 8, 14)
-    # Cap i topp
-    $g.FillRectangle($brush, 8, 1, 4, 2)
-    # 3 fyllnads-bars (hela batteriet fyllt, visuellt tydligt som "vital stapel")
-    $g.FillRectangle($brush, 8, 5, 4, 2)
-    $g.FillRectangle($brush, 8, 9, 4, 2)
-    $g.FillRectangle($brush, 8, 13, 4, 2)
+    # Huvud (cirkel)
+    $g.FillEllipse($brush, 7, 1, 6, 6)
+    # Torso (trapezoid från axlar till höfter)
+    $torso = @(
+        (New-Object System.Drawing.PointF 5, 18),
+        (New-Object System.Drawing.PointF 15, 18),
+        (New-Object System.Drawing.PointF 14, 8),
+        (New-Object System.Drawing.PointF 6, 8)
+    )
+    $g.FillPolygon($brush, $torso)
+    # Två "laddnings-bars" som svarta streck över torsot (kontrast mot guld-kropp)
+    $black = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::Black)
+    $g.FillRectangle($black, 6, 12, 8, 1)
+    $g.FillRectangle($black, 6, 15, 8, 1)
+    $black.Dispose()
 }
 
 Write-Host ""

@@ -221,29 +221,47 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         _drawArcSegment(dc, cx, cy, radius, 75,  _iconBodyBattery, bbStr, false);
     }
 
-    // Ritar en ikon centrerad vid angleDeg på en båge med given radie, följt av
-    // text på texten strax därpå. ccw=true för bottenkurva (CCW), false för toppkurva (CW).
+    // Ritar en ikon roterad i tangentens riktning vid angleDeg på en båge,
+    // följt av text direkt efter ikonen. ccw=true för botten (CCW), false för topp (CW).
     function _drawArcSegment(dc, cx, cy, radius, angleDeg, icon, text, ccw) {
-        // Ikon-position (centrerad på bågen vid angleDeg)
-        var iconX = 0;
-        var iconY = 0;
         if (icon != null) {
+            // Ikon-rotation så "upp" pekar inåt (botten-kurva) / utåt (topp-kurva),
+            // matchande textens tangent-orientering längs bågen.
+            // CCW bottenkurva: rotation_deg = 270 - angleDeg (matematisk konv., + = CCW math = CW skärm)
+            // CW toppkurva:    rotation_deg =  90 - angleDeg
+            var rotDeg = ccw ? (270 - angleDeg) : (90 - angleDeg);
+            var rotRad = rotDeg * Math.PI / 180.0;
+
+            var iconW = icon.getWidth();
+            var iconH = icon.getHeight();
+            var halfW = iconW / 2.0;
+            var halfH = iconH / 2.0;
+
+            // Beräkna ikon-centrumets position på bågen
             var rad = angleDeg * Math.PI / 180.0;
             var px = cx + (radius * Math.cos(rad));
             var py = cy - (radius * Math.sin(rad));
-            iconX = px - (icon.getWidth() / 2);
-            iconY = py - (icon.getHeight() / 2);
-            dc.drawBitmap(iconX, iconY, icon);
+
+            // Bygg transform: rotera runt ikonens egen mittpunkt
+            var xform = new Graphics.AffineTransform();
+            xform.translate(halfW, halfH);
+            xform.rotate(rotRad);
+            xform.translate(-halfW, -halfH);
+
+            // drawBitmap2 placerar top-left vid (x, y) efter transformen
+            dc.drawBitmap2(px - halfW, py - halfH, icon, {
+                :transform => xform
+            });
         }
 
-        // Text-position: vinkelförskjutning motsvarande ~halv ikonbredd + liten gap
-        // Ikonen upptar ~20 px / radius (rad) = grader via × 180/PI
         if (text == null || _fontArc == null) { return; }
+
+        // Text-start: halv ikonbredd + litet gap, översatt till grader via arc-längd
         var iconAngularHalf = 0;
         if (icon != null) {
             iconAngularHalf = ((icon.getWidth() / 2.0) / radius) * 180.0 / Math.PI;
         }
-        var gap = 2;  // grader extra
+        var gap = 2;
         var textStartAngle = ccw
             ? angleDeg + iconAngularHalf + gap
             : angleDeg - iconAngularHalf - gap;

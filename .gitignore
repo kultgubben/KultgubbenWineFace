@@ -1,0 +1,5 @@
+build/
+bin/
+*.prg
+*.iq
+.DS_Store

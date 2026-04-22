@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build KultgubbenWineFace",
+            "type": "shell",
+            "command": "\"${env:APPDATA}/Garmin/ConnectIQ/Sdks/connectiq-sdk-win-8.4.1-2026-02-03-e9f77eeaa/bin/monkeyc.bat\"",
+            "args": [
+                "-f", "monkey.jungle",
+                "-d", "enduro3",
+                "-o", "build/KultgubbenWineFace.prg",
+                "-y", "${env:USERPROFILE}/.connectiq/developer_key.der"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build IQ Package",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File build-iq.ps1",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Start Simulator",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy", "Bypass",
+                "-Command",
+                "if (-not (Get-Process simulator -ErrorAction SilentlyContinue)) { Start-Process \"$env:APPDATA\\Garmin\\ConnectIQ\\Sdks\\connectiq-sdk-win-8.4.1-2026-02-03-e9f77eeaa\\bin\\simulator.exe\"; Start-Sleep -Seconds 3; Write-Host 'Simulator startad' } else { Write-Host 'Simulator redan igang' }"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run in Simulator",
+            "type": "shell",
+            "command": "\"${env:APPDATA}/Garmin/ConnectIQ/Sdks/connectiq-sdk-win-8.4.1-2026-02-03-e9f77eeaa/bin/monkeydo.bat\"",
+            "args": [
+                "build/KultgubbenWineFace.prg",
+                "enduro3"
+            ],
+            "dependsOn": ["Build KultgubbenWineFace", "Start Simulator"],
+            "dependsOrder": "sequence",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}

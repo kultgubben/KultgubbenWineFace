@@ -28,10 +28,10 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     var _fontText = null;       // Liten serif för datum
     var _fontArc = null;        // Små serif för kurvtexter
 
-    // Font-kandidater i fallback-ordning. ExoSemiBold är den mest eleganta
-    // inbyggda vektor-fonten; Tomorrow är display-vänligt; Pridi är slab-serif.
-    const SERIF_FACES = ["ExoSemiBold", "TomorrowBold", "PridiSemiBoldGarmin",
-                         "PridiRegularGarmin", "RobotoCondensedRegular", "RobotoRegular"];
+    // Font-kandidater i fallback-ordning. PridiRegularGarmin är Garmins
+    // anpassade slab-serif (mest "serifliknande" bland inbyggda); övriga fallback.
+    const SERIF_FACES = ["PridiRegularGarmin", "PridiSemiBoldGarmin", "PridiRegular",
+                         "ExoSemiBold", "RobotoCondensedRegular", "RobotoRegular"];
 
     function initialize() {
         WatchFace.initialize();

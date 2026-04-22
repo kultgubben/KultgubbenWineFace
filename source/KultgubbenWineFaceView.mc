@@ -65,9 +65,9 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         var glasses = _computeGlasses();
 
         // Glas-ikonen uppskalad till ~23 % av skärmbredden.
-        // Topp-kant hamnar på 23 % av höjden för att ge luft till topp-kurvan.
+        // Topp-kanten placerad så hela gruppen (glas + tid + datum) blir centrerad.
         var targetSize = (w * 23) / 100;  // ~64 px på 280 px-skärm
-        var yTop = (h * 23) / 100;
+        var yTop = (h * 25) / 100;
         var x = (w / 2) - (targetSize / 2);
         if (_iconGlass != null) {
             dc.drawScaledBitmap(x, yTop, targetSize, targetSize, _iconGlass);
@@ -97,7 +97,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         if (_fontTime != null) {
             dc.drawText(
                 w / 2,
-                (h * 55 / 100),
+                (h * 58) / 100,
                 _fontTime,
                 timeStr,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
@@ -117,7 +117,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         if (_fontText != null) {
             dc.drawText(
                 w / 2,
-                (h * 73 / 100),
+                (h * 69) / 100,
                 _fontText,
                 dateStr,
                 Graphics.TEXT_JUSTIFY_CENTER

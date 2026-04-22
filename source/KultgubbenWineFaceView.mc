@@ -142,9 +142,8 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     function _drawBottomArc(dc, w, h) {
         var cx = w / 2;
         var cy = h / 2;
-        var radius = (w * 128) / 280;  // 128/280 proportion
+        var radius = (w * 128) / 280;
 
-        // Hämta data
         var stats = System.getSystemStats();
         var batteryStr;
         if (stats.batteryInDays != null && stats.batteryInDays >= 1.0) {
@@ -165,15 +164,10 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         var hr = _getHeartRate();
         var hrStr = (hr != null) ? hr.toString() : "--";
 
-        if (_fontArc == null) { return; }
-
-        dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
-
-        // Tre segment längs botten-kurvan (270° = rakt ned).
-        // Icon först, sedan text direkt till höger om ikonen (CCW = högre vinkel).
-        _drawArcSegment(dc, cx, cy, radius, 240, _iconBattery, batteryStr, true);
-        _drawArcSegment(dc, cx, cy, radius, 270, _iconFoot, stepsStr, true);
-        _drawArcSegment(dc, cx, cy, radius, 300, _iconHeart, hrStr, true);
+        _drawSegmentedArc(dc, cx, cy, radius, 270,
+            [_iconBattery, _iconFoot, _iconHeart],
+            [batteryStr, stepsStr, hrStr],
+            true);
     }
 
     function _formatSteps(steps) {
@@ -211,76 +205,89 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         if (bb != null) { _lastBodyBattery = bb; }
         var bbStr = (_lastBodyBattery != null) ? _lastBodyBattery.toString() : "--";
 
-        if (_fontArc == null) { return; }
-
-        dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
-
-        // Två segment längs topp-kurvan (90° = rakt upp).
-        // CW-riktning: högre vinkel till vänster, lägre till höger.
-        _drawArcSegment(dc, cx, cy, radius, 105, _iconBolt, stressStr, false);
-        _drawArcSegment(dc, cx, cy, radius, 75,  _iconBodyBattery, bbStr, false);
+        _drawSegmentedArc(dc, cx, cy, radius, 90,
+            [_iconBolt, _iconBodyBattery],
+            [stressStr, bbStr],
+            false);
     }
 
-    // Ritar en ikon roterad i tangentens riktning vid angleDeg på en båge,
-    // följt av text direkt efter ikonen. ccw=true för botten (CCW), false för topp (CW).
-    function _drawArcSegment(dc, cx, cy, radius, angleDeg, icon, text, ccw) {
-        if (icon != null) {
-            // Ikon-rotation så "upp" pekar inåt (botten-kurva) / utåt (topp-kurva),
-            // matchande textens tangent-orientering längs bågen.
-            var rotDeg = ccw ? (270 - angleDeg) : (90 - angleDeg);
-            var rotRad = rotDeg * Math.PI / 180.0;
+    // Ritar en sekvens av ikon+text-segment längs en båge, centrerade runt centerAngleDeg.
+    // Varje segments bredd mäts dynamiskt så spacing blir konstant oavsett textinnehåll.
+    // ccw=true: bottenbåge (CCW-riktning, låg→hög vinkel). false: toppbåge (CW, hög→låg).
+    function _drawSegmentedArc(dc, cx, cy, radius, centerAngleDeg, icons, texts, ccw) {
+        if (_fontArc == null) { return; }
+        var n = icons.size();
+        if (n == 0 || texts.size() != n) { return; }
 
-            var iconW = icon.getWidth();
-            var iconH = icon.getHeight();
-            var halfW = iconW / 2.0;
-            var halfH = iconH / 2.0;
+        var gapIconText = 3;      // grader mellan ikon och sin text
+        var gapBetweenSegments = 8;  // grader mellan två intilliggande segment
+        var toDeg = 180.0 / Math.PI;
 
-            // Radiellt offset så ikonens mittpunkt linjerar med bokstävernas visuella mitt.
-            // Text baseline ligger på `radius`, bokstäver växer inåt (botten) eller utåt (topp).
-            // Skift halva cap-höjden (~halva textstorleken).
-            var capHalf = 6;  // ~halva höjden av PridiRegular vid size 28
-            var iconRadius = ccw ? (radius - capHalf) : (radius + capHalf);
-
-            var rad = angleDeg * Math.PI / 180.0;
-            var px = cx + (iconRadius * Math.cos(rad));
-            var py = cy - (iconRadius * Math.sin(rad));
-
-            // Bygg transform: rotera runt ikonens egen mittpunkt
-            var xform = new Graphics.AffineTransform();
-            xform.translate(halfW, halfH);
-            xform.rotate(rotRad);
-            xform.translate(-halfW, -halfH);
-
-            dc.drawBitmap2(px - halfW, py - halfH, icon, {
-                :transform => xform
-            });
+        // Mät varje segments angulära bredd i förväg
+        var iconDegs = new [n];
+        var textDegs = new [n];
+        var totalDeg = 0.0;
+        for (var i = 0; i < n; i++) {
+            var iconPx = (icons[i] != null) ? icons[i].getWidth() : 0;
+            iconDegs[i] = (iconPx / radius.toFloat()) * toDeg;
+            var textPx = dc.getTextWidthInPixels(texts[i], _fontArc);
+            textDegs[i] = (textPx / radius.toFloat()) * toDeg;
+            totalDeg += iconDegs[i] + gapIconText + textDegs[i];
         }
+        totalDeg += gapBetweenSegments * (n - 1);
 
-        if (text == null || _fontArc == null) { return; }
+        // Direction-signs: CCW går "höger" = ökande vinkel; CW går "höger" = minskande vinkel
+        var sign = ccw ? 1 : -1;
+        var cursor = centerAngleDeg - sign * (totalDeg / 2.0);
 
-        // Text-start: halv ikonbredd + litet gap, översatt till grader via arc-längd
-        var iconAngularHalf = 0;
-        if (icon != null) {
-            iconAngularHalf = ((icon.getWidth() / 2.0) / radius) * 180.0 / Math.PI;
-        }
-        var gap = 2;
-        var textStartAngle = ccw
-            ? angleDeg + iconAngularHalf + gap
-            : angleDeg - iconAngularHalf - gap;
+        dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
 
         var direction = ccw
             ? Graphics.RADIAL_TEXT_DIRECTION_COUNTER_CLOCKWISE
             : Graphics.RADIAL_TEXT_DIRECTION_CLOCKWISE;
 
-        dc.drawRadialText(
-            cx, cy,
-            _fontArc,
-            text,
-            Graphics.TEXT_JUSTIFY_LEFT,
-            textStartAngle,
-            radius,
-            direction
-        );
+        for (var j = 0; j < n; j++) {
+            // Ikon: placeras centrerad på cursor + halvbredd
+            var iconCenterAngle = cursor + sign * (iconDegs[j] / 2.0);
+            if (icons[j] != null) {
+                _drawArcIcon(dc, cx, cy, radius, iconCenterAngle, icons[j], ccw);
+            }
+            cursor = cursor + sign * (iconDegs[j] + gapIconText);
+
+            // Text: börjar vid cursor
+            dc.drawRadialText(
+                cx, cy, _fontArc, texts[j],
+                Graphics.TEXT_JUSTIFY_LEFT,
+                cursor, radius, direction
+            );
+            cursor = cursor + sign * (textDegs[j] + gapBetweenSegments);
+        }
+    }
+
+    // Ritar en enstaka roterad ikon vid angleDeg på given båge med radiellt mittoffset.
+    function _drawArcIcon(dc, cx, cy, radius, angleDeg, icon, ccw) {
+        var rotDeg = ccw ? (270 - angleDeg) : (90 - angleDeg);
+        var rotRad = rotDeg * Math.PI / 180.0;
+
+        var iconW = icon.getWidth();
+        var iconH = icon.getHeight();
+        var halfW = iconW / 2.0;
+        var halfH = iconH / 2.0;
+
+        // Offset inåt (botten) / utåt (topp) så ikonens mitt linjerar med bokstävernas
+        var capHalf = 6;
+        var iconRadius = ccw ? (radius - capHalf) : (radius + capHalf);
+
+        var rad = angleDeg * Math.PI / 180.0;
+        var px = cx + (iconRadius * Math.cos(rad));
+        var py = cy - (iconRadius * Math.sin(rad));
+
+        var xform = new Graphics.AffineTransform();
+        xform.translate(halfW, halfH);
+        xform.rotate(rotRad);
+        xform.translate(-halfW, -halfH);
+
+        dc.drawBitmap2(px - halfW, py - halfH, icon, { :transform => xform });
     }
 
     function _getSensorLatest(method) {

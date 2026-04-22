@@ -26,51 +26,9 @@ function New-Icon {
     Write-Host "Skapad: icon_$name.png"
 }
 
-# Vinglas — 128x128 upplösning för skarp rendering. Tulpan-formad skål + skaft + fot.
-# Gold-färg matchar `COLOR_GOLD` i viewen (#ffaa00).
-$glassSize = 128
-$glassColor = [System.Drawing.Color]::FromArgb(255, 255, 170, 0)  # #ffaa00
-$wineColor  = [System.Drawing.Color]::FromArgb(255, 139, 26, 47)  # #8b1a2f burgundy
-
-$gbmp = New-Object System.Drawing.Bitmap $glassSize, $glassSize
-$gg = [System.Drawing.Graphics]::FromImage($gbmp)
-$gg.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-$gg.Clear([System.Drawing.Color]::Transparent)
-$gbrush = New-Object System.Drawing.SolidBrush $glassColor
-$gbrushWine = New-Object System.Drawing.SolidBrush $wineColor
-
-# Bowl-outline (tulpan) via GraphicsPath med bezier-kurvor
-$path = New-Object System.Drawing.Drawing2D.GraphicsPath
-$path.StartFigure()
-# Top-rim (rak linje över öppningen)
-$path.AddLine(30, 10, 98, 10)
-# Höger sida ned till skaft (bezier — bulgar ut, smalnar in)
-$path.AddBezier(98, 10, 118, 30, 110, 66, 72, 82)
-# Skaftbotten (kort linje över stem-toppen)
-$path.AddLine(72, 82, 56, 82)
-# Vänster sida upp (spegel av höger)
-$path.AddBezier(56, 82, 18, 66, 10, 30, 30, 10)
-$path.CloseFigure()
-$gg.FillPath($gbrush, $path)
-
-# Vin-fyllning inuti skålen (nedre ~60%)
-$winePath = New-Object System.Drawing.Drawing2D.GraphicsPath
-$winePath.StartFigure()
-$winePath.AddLine(22, 40, 106, 40)       # vin-yta (horisontell linje)
-$winePath.AddBezier(106, 40, 110, 60, 108, 72, 72, 78)
-$winePath.AddLine(72, 78, 56, 78)
-$winePath.AddBezier(56, 78, 20, 72, 18, 60, 22, 40)
-$winePath.CloseFigure()
-$gg.FillPath($gbrushWine, $winePath)
-
-# Skaft (smal vertikal rektangel)
-$gg.FillRectangle($gbrush, 60, 82, 8, 28)
-# Fot (flat oval i botten)
-$gg.FillEllipse($gbrush, 28, 106, 72, 12)
-
-$gbmp.Save((Join-Path $outDir "icon_glass.png"), [System.Drawing.Imaging.ImageFormat]::Png)
-$gg.Dispose(); $gbmp.Dispose(); $gbrush.Dispose(); $gbrushWine.Dispose(); $path.Dispose(); $winePath.Dispose()
-Write-Host "Skapad: icon_glass.png (128x128, tulpan-skal + vin-fyllning)"
+# Vinglas-ikonen (icon_glass.png) genereras EJ här — den är kopierad från KultgubbenWine
+# och matchas med huvudappens utseende. Uppskalningen sköts i view-koden via drawBitmap2
+# med FILTER_MODE_BILINEAR för mjukt anti-aliasat resultat.
 
 # Hjärta (puls)
 New-Icon -name "heart" -drawAction {

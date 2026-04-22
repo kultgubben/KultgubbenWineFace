@@ -78,13 +78,19 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     function _drawGlass(dc, w, h) {
         var glasses = _computeGlasses();
 
-        // Glas-ikonen uppskalad till ~23 % av skärmbredden.
-        // Topp-kanten placerad så hela gruppen (glas + tid + datum) blir centrerad.
+        // Glas-ikonen uppskalad till ~23 % av skärmbredden med bilinjär filtrering.
+        // drawBitmap2 + FILTER_MODE_BILINEAR ger mjuk skalning istället för pixlig nearest-neighbor.
         var targetSize = (w * 23) / 100;  // ~64 px på 280 px-skärm
         var yTop = (h * 25) / 100;
         var x = (w / 2) - (targetSize / 2);
         if (_iconGlass != null) {
-            dc.drawScaledBitmap(x, yTop, targetSize, targetSize, _iconGlass);
+            var scale = targetSize.toFloat() / _iconGlass.getWidth();
+            var xform = new Graphics.AffineTransform();
+            xform.scale(scale, scale);
+            dc.drawBitmap2(x, yTop, _iconGlass, {
+                :transform => xform,
+                :filterMode => Graphics.FILTER_MODE_BILINEAR
+            });
         }
 
         // Antal glas: serif-guld till höger om glaset, vertikalt centrerat med glaset

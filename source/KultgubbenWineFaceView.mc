@@ -21,7 +21,15 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     const COLOR_GOLD_GRAY   = 0xa8936a;
 
     var _iconGlass = null;
-    var _vectorFont = null;
+    var _fontTime = null;       // Stor serif för tid
+    var _fontNumber = null;     // Medelstor serif för glasantal
+    var _fontText = null;       // Liten serif för datum
+    var _fontArc = null;        // Små serif för kurvtexter
+
+    // Serif-kandidater i fallback-ordning. Pridi är den mest "serifliknande"
+    // bland Garmins vektor-typsnitt; övriga är sans-fallbacks.
+    const SERIF_FACES = ["PridiSemiBoldGarmin", "PridiRegularGarmin", "PridiRegular",
+                         "RobotoCondensedRegular", "RobotoRegular", "Swiss721Regular"];
 
     function initialize() {
         WatchFace.initialize();
@@ -29,10 +37,11 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
 
     function onLayout(dc) {
         _iconGlass = WatchUi.loadResource(Rez.Drawables.IconGlass);
-        _vectorFont = Graphics.getVectorFont({
-            :face => ["RobotoRegular", "RobotoCondensedRegular", "Swiss721Regular", "PridiRegular"],
-            :size => 16
-        });
+        var w = dc.getWidth();
+        _fontTime   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 56) / 280 });
+        _fontNumber = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 34) / 280 });
+        _fontText   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 14) / 280 });
+        _fontArc    = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 15) / 280 });
     }
 
     function onShow() {}
@@ -55,25 +64,25 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     function _drawGlass(dc, w, h) {
         var glasses = _computeGlasses();
 
-        // Glas-ikonen: centrerad horisontellt, top-area
+        // Glas-ikonen uppskalad till ~23 % av skärmbredden
+        var targetSize = (w * 23) / 100;  // ~64 px på 280 px-skärm
+        var y = (h * 23 / 100) - (targetSize / 2);
+        var x = (w / 2) - (targetSize / 2);
         if (_iconGlass != null) {
-            var iconW = _iconGlass.getWidth();
-            var iconH = _iconGlass.getHeight();
-            // Centrerad på 23% ned från toppen (motsvarar top:64 på 280px)
-            var y = (h * 23 / 100) - (iconH / 2);
-            var x = (w / 2) - (iconW / 2);
-            dc.drawBitmap(x, y, _iconGlass);
+            dc.drawScaledBitmap(x, y, targetSize, targetSize, _iconGlass);
         }
 
-        // Antal glas: guld-text till höger om ikonen
+        // Antal glas: serif-guld till höger om glaset
         dc.setColor(COLOR_GOLD, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(
-            w / 2 + 48,
-            (h * 23 / 100) - 10,
-            Graphics.FONT_NUMBER_MEDIUM,
-            glasses.toString(),
-            Graphics.TEXT_JUSTIFY_LEFT
-        );
+        if (_fontNumber != null) {
+            dc.drawText(
+                w / 2 + (targetSize / 2) + 6,
+                (h * 23 / 100),
+                _fontNumber,
+                glasses.toString(),
+                Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER
+            );
+        }
     }
 
     function _drawTime(dc, w, h) {
@@ -84,13 +93,15 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         ]);
 
         dc.setColor(COLOR_GOLD_LIGHT, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(
-            w / 2,
-            (h * 55 / 100),
-            Graphics.FONT_NUMBER_HOT,
-            timeStr,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-        );
+        if (_fontTime != null) {
+            dc.drawText(
+                w / 2,
+                (h * 55 / 100),
+                _fontTime,
+                timeStr,
+                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
+            );
+        }
     }
 
     function _drawDate(dc, w, h) {
@@ -102,13 +113,15 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         ]).toUpper();
 
         dc.setColor(COLOR_GOLD_DIM, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(
-            w / 2,
-            (h * 73 / 100),
-            Graphics.FONT_XTINY,
-            dateStr,
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
+        if (_fontText != null) {
+            dc.drawText(
+                w / 2,
+                (h * 73 / 100),
+                _fontText,
+                dateStr,
+                Graphics.TEXT_JUSTIFY_CENTER
+            );
+        }
     }
 
     function _drawBottomArc(dc, w, h) {
@@ -137,12 +150,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
 
         var fullStr = batteryStr + "  ·  " + stepsStr + "  ·  " + hrStr;
 
-        if (_vectorFont == null) { return; }
+        if (_fontArc == null) { return; }
 
         dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawRadialText(
             cx, cy,
-            _vectorFont,
+            _fontArc,
             fullStr,
             Graphics.TEXT_JUSTIFY_CENTER,
             270,              // startAngle: 270° = rakt ned (botten)
@@ -186,12 +199,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
 
         var fullStr = stressStr + "  ·  " + bbStr;
 
-        if (_vectorFont == null) { return; }
+        if (_fontArc == null) { return; }
 
         dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawRadialText(
             cx, cy,
-            _vectorFont,
+            _fontArc,
             fullStr,
             Graphics.TEXT_JUSTIFY_CENTER,
             90,               // startAngle: 90° = rakt upp (topp)

@@ -13,25 +13,40 @@ $original = [System.Drawing.Bitmap]::new($src)
 $origW = $original.Width
 $origH = $original.Height
 
-# Hitta stam-raderna: mycket smala rader med endast 1-4 synliga pixlar
-$stemRows = @()
+# Hitta stam-raderna: mycket smala rader med endast 1-4 synliga pixlar.
+# Vi vill ha den NEDRE gruppen (den faktiska stammen) — inte topp-raderna
+# (som kan vara smala pga vit rim-highlight).
+$narrowRows = @()
 for ($y = 0; $y -lt $origH; $y++) {
     $count = 0
     for ($x = 0; $x -lt $origW; $x++) {
         $c = $original.GetPixel($x, $y)
         if ($c.A -gt 64) { $count++ }
     }
-    if ($count -ge 1 -and $count -le 4) { $stemRows += $y }
+    if ($count -ge 1 -and $count -le 4) { $narrowRows += $y }
 }
 
-if ($stemRows.Count -eq 0) {
-    Write-Host "FEL: Inga stam-rader hittades i $src"
+if ($narrowRows.Count -eq 0) {
+    Write-Host "FEL: Inga smala rader hittades i $src"
     exit 1
 }
 
-# Mittersta stam-raden → där vi duplicerar
-$stemMid = $stemRows[[Math]::Floor($stemRows.Count / 2)]
-Write-Host "Stam-rader: $($stemRows -join ','); mitt = $stemMid"
+# Gruppera kontinuerliga rader → hitta sista gruppen (den som är NÄRMAST botten).
+$groups = @()
+$currentGroup = @($narrowRows[0])
+for ($i = 1; $i -lt $narrowRows.Count; $i++) {
+    if ($narrowRows[$i] -eq ($narrowRows[$i - 1] + 1)) {
+        $currentGroup += $narrowRows[$i]
+    } else {
+        $groups += ,$currentGroup
+        $currentGroup = @($narrowRows[$i])
+    }
+}
+$groups += ,$currentGroup
+
+$stemGroup = $groups[-1]  # sista gruppen = stammen
+$stemMid = $stemGroup[[Math]::Floor($stemGroup.Count / 2)]
+Write-Host "Smala rad-grupper: $($groups.Count); stam-gruppen är raderna $($stemGroup -join ','); mitt = $stemMid"
 
 # Bygg ny bitmap med $extraRows extra rader insatta vid $stemMid
 $newH = $origH + $extraRows

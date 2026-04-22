@@ -100,8 +100,8 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         dc.setColor(COLOR_GOLD, Graphics.COLOR_TRANSPARENT);
         if (_fontNumber != null) {
             dc.drawText(
-                w / 2 + (targetSize / 2) + 6,
-                yTop + (targetSize / 2),
+                w / 2 + (targetW / 2) + 6,
+                yTop + (targetW / 2),
                 _fontNumber,
                 glasses.toString(),
                 Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER

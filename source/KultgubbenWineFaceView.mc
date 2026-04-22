@@ -1,6 +1,7 @@
 using Toybox.ActivityMonitor;
 using Toybox.Graphics;
 using Toybox.Lang;
+using Toybox.SensorHistory;
 using Toybox.System;
 using Toybox.Time;
 using Toybox.WatchUi;
@@ -44,6 +45,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         dc.setColor(COLOR_BG, COLOR_BG);
         dc.clear();
 
+        _drawTopArc(dc, w, h);
         _drawGlass(dc, w, h);
         _drawTime(dc, w, h);
         _drawDate(dc, w, h);
@@ -165,6 +167,54 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
                 if (sample != null && sample.heartRate != null
                     && sample.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
                     return sample.heartRate;
+                }
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function _drawTopArc(dc, w, h) {
+        var cx = w / 2;
+        var cy = h / 2;
+        var radius = (w * 118) / 280;  // 118/280 — mindre än botten för optisk balans
+
+        var stress = _getSensorLatest(:getStressHistory);
+        var stressStr = (stress != null) ? "STRESS " + stress.toString() : "STRESS --";
+
+        var bb = _getSensorLatest(:getBodyBatteryHistory);
+        var bbStr = (bb != null) ? "BB " + bb.toString() : "BB --";
+
+        var fullStr = stressStr + "  ·  " + bbStr;
+
+        if (_vectorFont == null) { return; }
+
+        dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawRadialText(
+            cx, cy,
+            _vectorFont,
+            fullStr,
+            Graphics.TEXT_JUSTIFY_CENTER,
+            90,               // startAngle: 90° = rakt upp (topp)
+            radius,
+            Graphics.RADIAL_TEXT_DIRECTION_CLOCKWISE
+        );
+    }
+
+    function _getSensorLatest(method) {
+        try {
+            if (!(Toybox has :SensorHistory)) { return null; }
+            var iter;
+            if (method == :getStressHistory) {
+                iter = Toybox.SensorHistory.getStressHistory({:period => 1});
+            } else if (method == :getBodyBatteryHistory) {
+                iter = Toybox.SensorHistory.getBodyBatteryHistory({:period => 1});
+            } else {
+                return null;
+            }
+            if (iter != null) {
+                var sample = iter.next();
+                if (sample != null && sample.data != null) {
+                    return sample.data.toNumber();
                 }
             }
         } catch(e) {}

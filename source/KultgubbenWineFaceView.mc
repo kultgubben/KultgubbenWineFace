@@ -1,5 +1,7 @@
 using Toybox.ActivityMonitor;
 using Toybox.Graphics;
+using Toybox.Lang;
+using Toybox.System;
 using Toybox.Time;
 using Toybox.WatchUi;
 
@@ -38,6 +40,8 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         dc.clear();
 
         _drawGlass(dc, w, h);
+        _drawTime(dc, w, h);
+        _drawDate(dc, w, h);
     }
 
     function _drawGlass(dc, w, h) {
@@ -61,6 +65,41 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             Graphics.FONT_NUMBER_MEDIUM,
             glasses.toString(),
             Graphics.TEXT_JUSTIFY_LEFT
+        );
+    }
+
+    function _drawTime(dc, w, h) {
+        var clock = System.getClockTime();
+        var timeStr = Lang.format("$1$:$2$", [
+            clock.hour.format("%02d"),
+            clock.min.format("%02d")
+        ]);
+
+        dc.setColor(COLOR_GOLD_LIGHT, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(
+            w / 2,
+            (h * 55 / 100),
+            Graphics.FONT_NUMBER_HOT,
+            timeStr,
+            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
+        );
+    }
+
+    function _drawDate(dc, w, h) {
+        var info = Time.Gregorian.info(Time.now(), Time.FORMAT_MEDIUM);
+        var dateStr = Lang.format("$1$ $2$ $3$", [
+            info.day_of_week,
+            info.day.format("%02d"),
+            info.month
+        ]).toUpper();
+
+        dc.setColor(COLOR_GOLD_DIM, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(
+            w / 2,
+            (h * 73 / 100),
+            Graphics.FONT_XTINY,
+            dateStr,
+            Graphics.TEXT_JUSTIFY_CENTER
         );
     }
 

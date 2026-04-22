@@ -45,7 +45,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         _fontTime   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 72) / 280 });
         _fontNumber = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 42) / 280 });
         _fontText   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 20) / 280 });
-        _fontArc    = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 22) / 280 });
+        _fontArc    = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 28) / 280 });
     }
 
     function onShow() {}

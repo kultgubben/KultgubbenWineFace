@@ -38,10 +38,10 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     function onLayout(dc) {
         _iconGlass = WatchUi.loadResource(Rez.Drawables.IconGlass);
         var w = dc.getWidth();
-        _fontTime   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 56) / 280 });
-        _fontNumber = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 34) / 280 });
-        _fontText   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 14) / 280 });
-        _fontArc    = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 15) / 280 });
+        _fontTime   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 72) / 280 });
+        _fontNumber = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 42) / 280 });
+        _fontText   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 20) / 280 });
+        _fontArc    = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 22) / 280 });
     }
 
     function onShow() {}
@@ -64,20 +64,21 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     function _drawGlass(dc, w, h) {
         var glasses = _computeGlasses();
 
-        // Glas-ikonen uppskalad till ~23 % av skärmbredden
+        // Glas-ikonen uppskalad till ~23 % av skärmbredden.
+        // Topp-kant hamnar på 23 % av höjden för att ge luft till topp-kurvan.
         var targetSize = (w * 23) / 100;  // ~64 px på 280 px-skärm
-        var y = (h * 23 / 100) - (targetSize / 2);
+        var yTop = (h * 23) / 100;
         var x = (w / 2) - (targetSize / 2);
         if (_iconGlass != null) {
-            dc.drawScaledBitmap(x, y, targetSize, targetSize, _iconGlass);
+            dc.drawScaledBitmap(x, yTop, targetSize, targetSize, _iconGlass);
         }
 
-        // Antal glas: serif-guld till höger om glaset
+        // Antal glas: serif-guld till höger om glaset, vertikalt centrerat med glaset
         dc.setColor(COLOR_GOLD, Graphics.COLOR_TRANSPARENT);
         if (_fontNumber != null) {
             dc.drawText(
                 w / 2 + (targetSize / 2) + 6,
-                (h * 23 / 100),
+                yTop + (targetSize / 2),
                 _fontNumber,
                 glasses.toString(),
                 Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER

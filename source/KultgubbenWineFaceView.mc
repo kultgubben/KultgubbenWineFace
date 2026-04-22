@@ -26,6 +26,10 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     var _fontText = null;       // Liten serif för datum
     var _fontArc = null;        // Små serif för kurvtexter
 
+    // Senast kända sensor-värden (cacheas så vi inte blinkar "--" mellan samples)
+    var _lastStress = null;
+    var _lastBodyBattery = null;
+
     // Font-kandidater i fallback-ordning. PridiRegularGarmin är Garmins
     // anpassade slab-serif (mest "serifliknande" bland inbyggda); övriga fallback.
     const SERIF_FACES = ["PridiRegularGarmin", "PridiSemiBoldGarmin", "PridiRegular",
@@ -195,10 +199,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         var radius = (w * 118) / 280;  // 118/280 — mindre än botten för optisk balans
 
         var stress = _getSensorLatest(:getStressHistory);
-        var stressStr = (stress != null) ? "STRESS " + stress.toString() : "STRESS --";
+        if (stress != null) { _lastStress = stress; }
+        var stressStr = (_lastStress != null) ? "STRESS " + _lastStress.toString() : "STRESS --";
 
         var bb = _getSensorLatest(:getBodyBatteryHistory);
-        var bbStr = (bb != null) ? "BB " + bb.toString() : "BB --";
+        if (bb != null) { _lastBodyBattery = bb; }
+        var bbStr = (_lastBodyBattery != null) ? "BB " + _lastBodyBattery.toString() : "BB --";
 
         var fullStr = stressStr + "  ·  " + bbStr;
 
@@ -221,9 +227,9 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             if (!(Toybox has :SensorHistory)) { return null; }
             var iter;
             if (method == :getStressHistory) {
-                iter = Toybox.SensorHistory.getStressHistory({:period => 1});
+                iter = Toybox.SensorHistory.getStressHistory({});
             } else if (method == :getBodyBatteryHistory) {
-                iter = Toybox.SensorHistory.getBodyBatteryHistory({:period => 1});
+                iter = Toybox.SensorHistory.getBodyBatteryHistory({});
             } else {
                 return null;
             }

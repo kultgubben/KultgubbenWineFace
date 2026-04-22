@@ -13,12 +13,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     const STEPS_PER_GLASS_FRI_SAT = 3000;
     const ACTIVITY_MIN_VIGOROUS   = 30;
 
-    // Palett
+    // Palett — justerad för MIP-skärm (högre mättnad än mockupens sRGB-värden)
     const COLOR_BG          = 0x000000;
-    const COLOR_GOLD        = 0xd4af37;
-    const COLOR_GOLD_LIGHT  = 0xf0e6d2;
-    const COLOR_GOLD_DIM    = 0x8a6d3b;
-    const COLOR_GOLD_GRAY   = 0xa8936a;
+    const COLOR_GOLD        = 0xffaa00;  // Mättad bärnstens-guld
+    const COLOR_GOLD_LIGHT  = 0xffcc33;  // Varmare ljus guld för tid
+    const COLOR_GOLD_DIM    = 0xcc8800;  // Mörk guld för datum
+    const COLOR_GOLD_GRAY   = 0xdda15e;  // Guldbrun för kurvtexter
     const COLOR_AOD_GRAY    = 0x808080;
 
     var _iconGlass = null;
@@ -28,10 +28,10 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     var _fontText = null;       // Liten serif för datum
     var _fontArc = null;        // Små serif för kurvtexter
 
-    // Serif-kandidater i fallback-ordning. Pridi är den mest "serifliknande"
-    // bland Garmins vektor-typsnitt; övriga är sans-fallbacks.
-    const SERIF_FACES = ["PridiSemiBoldGarmin", "PridiRegularGarmin", "PridiRegular",
-                         "RobotoCondensedRegular", "RobotoRegular", "Swiss721Regular"];
+    // Font-kandidater i fallback-ordning. ExoSemiBold är den mest eleganta
+    // inbyggda vektor-fonten; Tomorrow är display-vänligt; Pridi är slab-serif.
+    const SERIF_FACES = ["ExoSemiBold", "TomorrowBold", "PridiSemiBoldGarmin",
+                         "PridiRegularGarmin", "RobotoCondensedRegular", "RobotoRegular"];
 
     function initialize() {
         WatchFace.initialize();

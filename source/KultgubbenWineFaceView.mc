@@ -227,8 +227,6 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         if (icon != null) {
             // Ikon-rotation så "upp" pekar inåt (botten-kurva) / utåt (topp-kurva),
             // matchande textens tangent-orientering längs bågen.
-            // CCW bottenkurva: rotation_deg = 270 - angleDeg (matematisk konv., + = CCW math = CW skärm)
-            // CW toppkurva:    rotation_deg =  90 - angleDeg
             var rotDeg = ccw ? (270 - angleDeg) : (90 - angleDeg);
             var rotRad = rotDeg * Math.PI / 180.0;
 
@@ -237,10 +235,15 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             var halfW = iconW / 2.0;
             var halfH = iconH / 2.0;
 
-            // Beräkna ikon-centrumets position på bågen
+            // Radiellt offset så ikonens mittpunkt linjerar med bokstävernas visuella mitt.
+            // Text baseline ligger på `radius`, bokstäver växer inåt (botten) eller utåt (topp).
+            // Skift halva cap-höjden (~halva textstorleken).
+            var capHalf = 10;  // ~halva höjden av PridiRegular vid size 28
+            var iconRadius = ccw ? (radius - capHalf) : (radius + capHalf);
+
             var rad = angleDeg * Math.PI / 180.0;
-            var px = cx + (radius * Math.cos(rad));
-            var py = cy - (radius * Math.sin(rad));
+            var px = cx + (iconRadius * Math.cos(rad));
+            var py = cy - (iconRadius * Math.sin(rad));
 
             // Bygg transform: rotera runt ikonens egen mittpunkt
             var xform = new Graphics.AffineTransform();
@@ -248,7 +251,6 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             xform.rotate(rotRad);
             xform.translate(-halfW, -halfH);
 
-            // drawBitmap2 placerar top-left vid (x, y) efter transformen
             dc.drawBitmap2(px - halfW, py - halfH, icon, {
                 :transform => xform
             });

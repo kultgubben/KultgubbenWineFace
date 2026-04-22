@@ -53,11 +53,6 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         var w = dc.getWidth();
         var h = dc.getHeight();
 
-        if (_isSleeping) {
-            _drawAod(dc, w, h);
-            return;
-        }
-
         dc.setColor(COLOR_BG, COLOR_BG);
         dc.clear();
 

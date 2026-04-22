@@ -26,6 +26,28 @@ function New-Icon {
     Write-Host "Skapad: icon_$name.png"
 }
 
+# Vinglas — stor upplösning (80x80) för skarp rendering när den skalas ned på skärmen.
+# Gold-färg matchar `COLOR_GOLD` i viewen (#ffaa00).
+$glassSize = 80
+$glassColor = [System.Drawing.Color]::FromArgb(255, 255, 170, 0)  # #ffaa00
+
+$gbmp = New-Object System.Drawing.Bitmap $glassSize, $glassSize
+$gg = [System.Drawing.Graphics]::FromImage($gbmp)
+$gg.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+$gg.Clear([System.Drawing.Color]::Transparent)
+$gbrush = New-Object System.Drawing.SolidBrush $glassColor
+
+# Bowl (oval)
+$gg.FillEllipse($gbrush, 14, 4, 52, 48)
+# Stem (smal rektangel)
+$gg.FillRectangle($gbrush, 37, 48, 6, 16)
+# Base (flat oval)
+$gg.FillEllipse($gbrush, 18, 60, 44, 10)
+
+$gbmp.Save((Join-Path $outDir "icon_glass.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+$gg.Dispose(); $gbmp.Dispose(); $gbrush.Dispose()
+Write-Host "Skapad: icon_glass.png (80x80)"
+
 # Hjärta (puls)
 New-Icon -name "heart" -drawAction {
     param($g, $brush, $pen)

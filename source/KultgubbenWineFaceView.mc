@@ -238,7 +238,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             // Radiellt offset så ikonens mittpunkt linjerar med bokstävernas visuella mitt.
             // Text baseline ligger på `radius`, bokstäver växer inåt (botten) eller utåt (topp).
             // Skift halva cap-höjden (~halva textstorleken).
-            var capHalf = 14;  // ~halva höjden av PridiRegular vid size 28
+            var capHalf = 6;  // ~halva höjden av PridiRegular vid size 28
             var iconRadius = ccw ? (radius - capHalf) : (radius + capHalf);
 
             var rad = angleDeg * Math.PI / 180.0;

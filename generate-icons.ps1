@@ -62,38 +62,35 @@ New-Icon -name "foot" -drawAction {
     $g.FillEllipse($brush, 15, 8, 2, 2)
 }
 
-# Blixt (stress)
+# Stress-mätare (halvcirkel-gauge + visarnål)
 New-Icon -name "bolt" -drawAction {
     param($g, $brush, $pen)
-    $pts = @(
-        (New-Object System.Drawing.PointF 12, 2),
-        (New-Object System.Drawing.PointF 4, 11),
-        (New-Object System.Drawing.PointF 9, 11),
-        (New-Object System.Drawing.PointF 7, 18),
-        (New-Object System.Drawing.PointF 16, 9),
-        (New-Object System.Drawing.PointF 11, 9)
-    )
-    $g.FillPolygon($brush, $pts)
+    $pen.Width = 2
+    # Övre halvcirkel (startAngle=180°=9-o-clock, sweep=180° medsols via 12-o-clock till 3-o-clock)
+    $g.DrawArc($pen, 2, 4, 16, 16, 180, 180)
+    # Visarnål från hub (10, 12) upp-höger till ~13-vinkel (stress-indikation)
+    $pen.Width = 2
+    $g.DrawLine($pen, 10, 12, 15, 6)
+    # Hub-dot i mitten
+    $g.FillEllipse($brush, 9, 11, 3, 3)
+    # Lilla "tick-marks" vid gaugens kanter för tydlighet
+    $g.FillRectangle($brush, 2, 11, 2, 1)   # vänster ände
+    $g.FillRectangle($brush, 16, 11, 2, 1)  # höger ände
 }
 
-# Body Battery — person-siluett med horisontella "laddnings-bars" över kroppen
+# Body Battery — stick-figur (huvud + kropp + utsträckta armar + ben) → tydlig person-siluett
 New-Icon -name "bodybattery" -drawAction {
     param($g, $brush, $pen)
     # Huvud (cirkel)
     $g.FillEllipse($brush, 7, 1, 6, 6)
-    # Torso (trapezoid från axlar till höfter)
-    $torso = @(
-        (New-Object System.Drawing.PointF 5, 18),
-        (New-Object System.Drawing.PointF 15, 18),
-        (New-Object System.Drawing.PointF 14, 8),
-        (New-Object System.Drawing.PointF 6, 8)
-    )
-    $g.FillPolygon($brush, $torso)
-    # Två "laddnings-bars" som svarta streck över torsot (kontrast mot guld-kropp)
-    $black = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::Black)
-    $g.FillRectangle($black, 6, 12, 8, 1)
-    $g.FillRectangle($black, 6, 15, 8, 1)
-    $black.Dispose()
+    # Torso (rektangel)
+    $g.FillRectangle($brush, 8, 8, 4, 6)
+    # Armar (utsträckta horisontellt)
+    $g.FillRectangle($brush, 2, 9, 6, 2)   # vänster arm
+    $g.FillRectangle($brush, 12, 9, 6, 2)  # höger arm
+    # Ben (två vertikala linjer)
+    $g.FillRectangle($brush, 7, 14, 2, 5)  # vänster ben
+    $g.FillRectangle($brush, 11, 14, 2, 5) # höger ben
 }
 
 Write-Host ""

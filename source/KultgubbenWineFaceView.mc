@@ -19,10 +19,8 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     const COLOR_GOLD_LIGHT  = 0xffcc33;  // Varmare ljus guld för tid
     const COLOR_GOLD_DIM    = 0xcc8800;  // Mörk guld för datum
     const COLOR_GOLD_GRAY   = 0xdda15e;  // Guldbrun för kurvtexter
-    const COLOR_AOD_GRAY    = 0x808080;
 
     var _iconGlass = null;
-    var _isSleeping = false;
     var _fontTime = null;       // Stor serif för tid
     var _fontNumber = null;     // Medelstor serif för glasantal
     var _fontText = null;       // Liten serif för datum
@@ -135,10 +133,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         // Hämta data
         var stats = System.getSystemStats();
         var batteryStr;
-        if (stats.batteryInDays != null) {
+        if (stats.batteryInDays != null && stats.batteryInDays >= 1.0) {
             batteryStr = Lang.format("BAT $1$d", [stats.batteryInDays.format("%d")]);
-        } else {
+        } else if (stats.battery != null) {
             batteryStr = Lang.format("BAT $1$%", [stats.battery.format("%d")]);
+        } else {
+            batteryStr = "BAT --";
         }
 
         var steps = 0;
@@ -262,59 +262,6 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         return (day == 6 || day == 7);
     }
 
-    function onPartialUpdate(dc) {}
-
-    function onEnterSleep() {
-        _isSleeping = true;
-        WatchUi.requestUpdate();
-    }
-
-    function onExitSleep() {
-        _isSleeping = false;
-        WatchUi.requestUpdate();
-    }
-
-    function _drawAod(dc, w, h) {
-        dc.setColor(COLOR_BG, COLOR_BG);
-        dc.clear();
-
-        // Pixel-shift för burn-in-skydd — roterar ±2 px per minut
-        var clock = System.getClockTime();
-        var shiftX = 0;
-        var shiftY = 0;
-        var phase = clock.min % 5;
-        if (phase == 1) { shiftX = 2; }
-        else if (phase == 2) { shiftY = 2; }
-        else if (phase == 3) { shiftX = -2; }
-        else if (phase == 4) { shiftY = -2; }
-
-        dc.setColor(COLOR_AOD_GRAY, Graphics.COLOR_TRANSPARENT);
-
-        // Tid — samma position som i wake-läget
-        var timeStr = Lang.format("$1$:$2$", [
-            clock.hour.format("%02d"),
-            clock.min.format("%02d")
-        ]);
-        if (_fontTime != null) {
-            dc.drawText(
-                w / 2 + shiftX,
-                ((h * 58) / 100) + shiftY,
-                _fontTime,
-                timeStr,
-                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-            );
-        }
-
-        // Bara glas-antal (ingen ikon i AOD → sparar energi)
-        var glasses = _computeGlasses();
-        if (_fontNumber != null) {
-            dc.drawText(
-                w / 2 + shiftX,
-                ((h * 28) / 100) + shiftY,
-                _fontNumber,
-                glasses.toString(),
-                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER
-            );
-        }
-    }
+    function onEnterSleep() {}
+    function onExitSleep() {}
 }

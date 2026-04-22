@@ -78,13 +78,16 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     function _drawGlass(dc, w, h) {
         var glasses = _computeGlasses();
 
-        // Glas-ikonen uppskalad till ~23 % av skärmbredden med bilinjär filtrering.
+        // Glas-ikonen uppskalad ~23 % av skärmbredden; höjd proportionell mot källans aspekt.
         // drawBitmap2 + FILTER_MODE_BILINEAR ger mjuk skalning istället för pixlig nearest-neighbor.
-        var targetSize = (w * 23) / 100;  // ~64 px på 280 px-skärm
+        var targetW = (w * 23) / 100;  // ~64 px på 280 px-skärm
         var yTop = (h * 25) / 100;
-        var x = (w / 2) - (targetSize / 2);
         if (_iconGlass != null) {
-            var scale = targetSize.toFloat() / _iconGlass.getWidth();
+            var srcW = _iconGlass.getWidth();
+            var srcH = _iconGlass.getHeight();
+            var scale = targetW.toFloat() / srcW;
+            var targetH = (srcH * scale).toNumber();
+            var x = (w / 2) - (targetW / 2);
             var xform = new Graphics.AffineTransform();
             xform.scale(scale, scale);
             dc.drawBitmap2(x, yTop, _iconGlass, {

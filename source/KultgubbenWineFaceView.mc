@@ -20,6 +20,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     const COLOR_GOLD_GRAY   = 0xa8936a;
 
     var _iconGlass = null;
+    var _vectorFont = null;
 
     function initialize() {
         WatchFace.initialize();
@@ -27,6 +28,10 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
 
     function onLayout(dc) {
         _iconGlass = WatchUi.loadResource(Rez.Drawables.IconGlass);
+        _vectorFont = Graphics.getVectorFont({
+            :face => ["RobotoRegular", "RobotoCondensedRegular", "Swiss721Regular", "PridiRegular"],
+            :size => 16
+        });
     }
 
     function onShow() {}
@@ -130,10 +135,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
 
         var fullStr = batteryStr + "  ·  " + stepsStr + "  ·  " + hrStr;
 
+        if (_vectorFont == null) { return; }
+
         dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawRadialText(
             cx, cy,
-            Graphics.FONT_XTINY,
+            _vectorFont,
             fullStr,
             Graphics.TEXT_JUSTIFY_CENTER,
             270,              // startAngle: 270° = rakt ned (botten)

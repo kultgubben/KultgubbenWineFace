@@ -42,6 +42,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         _drawGlass(dc, w, h);
         _drawTime(dc, w, h);
         _drawDate(dc, w, h);
+        _drawBottomArc(dc, w, h);
     }
 
     function _drawGlass(dc, w, h) {
@@ -101,6 +102,66 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             dateStr,
             Graphics.TEXT_JUSTIFY_CENTER
         );
+    }
+
+    function _drawBottomArc(dc, w, h) {
+        var cx = w / 2;
+        var cy = h / 2;
+        var radius = (w * 128) / 280;  // 128/280 proportion
+
+        // Hämta data
+        var stats = System.getSystemStats();
+        var batteryStr;
+        if (stats.batteryInDays != null) {
+            batteryStr = Lang.format("BAT $1$d", [stats.batteryInDays.format("%d")]);
+        } else {
+            batteryStr = Lang.format("BAT $1$%", [stats.battery.format("%d")]);
+        }
+
+        var steps = 0;
+        try {
+            var am = ActivityMonitor.getInfo();
+            if (am != null && am.steps != null) { steps = am.steps; }
+        } catch(e) {}
+        var stepsStr = Lang.format("STEG $1$", [_formatSteps(steps)]);
+
+        var hr = _getHeartRate();
+        var hrStr = (hr != null) ? "HR " + hr.toString() : "HR --";
+
+        var fullStr = batteryStr + "  ·  " + stepsStr + "  ·  " + hrStr;
+
+        dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawRadialText(
+            cx, cy,
+            Graphics.FONT_XTINY,
+            fullStr,
+            Graphics.TEXT_JUSTIFY_CENTER,
+            270,              // startAngle: 270° = rakt ned (botten)
+            radius,
+            Graphics.RADIAL_TEXT_DIRECTION_COUNTER_CLOCKWISE
+        );
+    }
+
+    function _formatSteps(steps) {
+        // Tusentalsavgränsare (blanksteg): 7240 → "7 240"
+        if (steps < 1000) { return steps.toString(); }
+        var thousands = steps / 1000;
+        var remainder = steps % 1000;
+        return thousands.toString() + " " + remainder.format("%03d");
+    }
+
+    function _getHeartRate() {
+        try {
+            var iter = ActivityMonitor.getHeartRateHistory(1, true);
+            if (iter != null) {
+                var sample = iter.next();
+                if (sample != null && sample.heartRate != null
+                    && sample.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
+                    return sample.heartRate;
+                }
+            }
+        } catch(e) {}
+        return null;
     }
 
     function _computeGlasses() {

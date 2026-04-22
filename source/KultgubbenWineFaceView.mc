@@ -21,6 +21,11 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     const COLOR_GOLD_GRAY   = 0xdda15e;  // Guldbrun för kurvtexter
 
     var _iconGlass = null;
+    var _iconBattery = null;
+    var _iconFoot = null;
+    var _iconHeart = null;
+    var _iconBolt = null;
+    var _iconBodyBattery = null;
     var _fontTime = null;       // Stor serif för tid
     var _fontNumber = null;     // Medelstor serif för glasantal
     var _fontText = null;       // Liten serif för datum
@@ -40,7 +45,12 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
     }
 
     function onLayout(dc) {
-        _iconGlass = WatchUi.loadResource(Rez.Drawables.IconGlass);
+        _iconGlass       = WatchUi.loadResource(Rez.Drawables.IconGlass);
+        _iconBattery     = WatchUi.loadResource(Rez.Drawables.IconBattery);
+        _iconFoot        = WatchUi.loadResource(Rez.Drawables.IconFoot);
+        _iconHeart       = WatchUi.loadResource(Rez.Drawables.IconHeart);
+        _iconBolt        = WatchUi.loadResource(Rez.Drawables.IconBolt);
+        _iconBodyBattery = WatchUi.loadResource(Rez.Drawables.IconBodyBattery);
         var w = dc.getWidth();
         _fontTime   = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 72) / 280 });
         _fontNumber = Graphics.getVectorFont({ :face => SERIF_FACES, :size => (w * 42) / 280 });
@@ -138,11 +148,11 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         var stats = System.getSystemStats();
         var batteryStr;
         if (stats.batteryInDays != null && stats.batteryInDays >= 1.0) {
-            batteryStr = Lang.format("BAT $1$d", [stats.batteryInDays.format("%d")]);
+            batteryStr = stats.batteryInDays.format("%d") + "d";
         } else if (stats.battery != null) {
-            batteryStr = Lang.format("BAT $1$%", [stats.battery.format("%d")]);
+            batteryStr = stats.battery.format("%d") + "%";
         } else {
-            batteryStr = "BAT --";
+            batteryStr = "--";
         }
 
         var steps = 0;
@@ -150,25 +160,20 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
             var am = ActivityMonitor.getInfo();
             if (am != null && am.steps != null) { steps = am.steps; }
         } catch(e) {}
-        var stepsStr = Lang.format("STEG $1$", [_formatSteps(steps)]);
+        var stepsStr = _formatSteps(steps);
 
         var hr = _getHeartRate();
-        var hrStr = (hr != null) ? "HR " + hr.toString() : "HR --";
-
-        var fullStr = batteryStr + "  ·  " + stepsStr + "  ·  " + hrStr;
+        var hrStr = (hr != null) ? hr.toString() : "--";
 
         if (_fontArc == null) { return; }
 
         dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawRadialText(
-            cx, cy,
-            _fontArc,
-            fullStr,
-            Graphics.TEXT_JUSTIFY_CENTER,
-            270,              // startAngle: 270° = rakt ned (botten)
-            radius,
-            Graphics.RADIAL_TEXT_DIRECTION_COUNTER_CLOCKWISE
-        );
+
+        // Tre segment längs botten-kurvan (270° = rakt ned).
+        // Icon först, sedan text direkt till höger om ikonen (CCW = högre vinkel).
+        _drawArcSegment(dc, cx, cy, radius, 240, _iconBattery, batteryStr, true);
+        _drawArcSegment(dc, cx, cy, radius, 270, _iconFoot, stepsStr, true);
+        _drawArcSegment(dc, cx, cy, radius, 300, _iconHeart, hrStr, true);
     }
 
     function _formatSteps(steps) {
@@ -200,25 +205,61 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
 
         var stress = _getSensorLatest(:getStressHistory);
         if (stress != null) { _lastStress = stress; }
-        var stressStr = (_lastStress != null) ? "STRESS " + _lastStress.toString() : "STRESS --";
+        var stressStr = (_lastStress != null) ? _lastStress.toString() : "--";
 
         var bb = _getSensorLatest(:getBodyBatteryHistory);
         if (bb != null) { _lastBodyBattery = bb; }
-        var bbStr = (_lastBodyBattery != null) ? "BB " + _lastBodyBattery.toString() : "BB --";
-
-        var fullStr = stressStr + "  ·  " + bbStr;
+        var bbStr = (_lastBodyBattery != null) ? _lastBodyBattery.toString() : "--";
 
         if (_fontArc == null) { return; }
 
         dc.setColor(COLOR_GOLD_GRAY, Graphics.COLOR_TRANSPARENT);
+
+        // Två segment längs topp-kurvan (90° = rakt upp).
+        // CW-riktning: högre vinkel till vänster, lägre till höger.
+        _drawArcSegment(dc, cx, cy, radius, 105, _iconBolt, stressStr, false);
+        _drawArcSegment(dc, cx, cy, radius, 75,  _iconBodyBattery, bbStr, false);
+    }
+
+    // Ritar en ikon centrerad vid angleDeg på en båge med given radie, följt av
+    // text på texten strax därpå. ccw=true för bottenkurva (CCW), false för toppkurva (CW).
+    function _drawArcSegment(dc, cx, cy, radius, angleDeg, icon, text, ccw) {
+        // Ikon-position (centrerad på bågen vid angleDeg)
+        var iconX = 0;
+        var iconY = 0;
+        if (icon != null) {
+            var rad = angleDeg * Math.PI / 180.0;
+            var px = cx + (radius * Math.cos(rad));
+            var py = cy - (radius * Math.sin(rad));
+            iconX = px - (icon.getWidth() / 2);
+            iconY = py - (icon.getHeight() / 2);
+            dc.drawBitmap(iconX, iconY, icon);
+        }
+
+        // Text-position: vinkelförskjutning motsvarande ~halv ikonbredd + liten gap
+        // Ikonen upptar ~20 px / radius (rad) = grader via × 180/PI
+        if (text == null || _fontArc == null) { return; }
+        var iconAngularHalf = 0;
+        if (icon != null) {
+            iconAngularHalf = ((icon.getWidth() / 2.0) / radius) * 180.0 / Math.PI;
+        }
+        var gap = 2;  // grader extra
+        var textStartAngle = ccw
+            ? angleDeg + iconAngularHalf + gap
+            : angleDeg - iconAngularHalf - gap;
+
+        var direction = ccw
+            ? Graphics.RADIAL_TEXT_DIRECTION_COUNTER_CLOCKWISE
+            : Graphics.RADIAL_TEXT_DIRECTION_CLOCKWISE;
+
         dc.drawRadialText(
             cx, cy,
             _fontArc,
-            fullStr,
-            Graphics.TEXT_JUSTIFY_CENTER,
-            90,               // startAngle: 90° = rakt upp (topp)
+            text,
+            Graphics.TEXT_JUSTIFY_LEFT,
+            textStartAngle,
             radius,
-            Graphics.RADIAL_TEXT_DIRECTION_CLOCKWISE
+            direction
         );
     }
 

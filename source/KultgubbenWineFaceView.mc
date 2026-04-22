@@ -117,7 +117,7 @@ class KultgubbenWineFaceView extends WatchUi.WatchFace {
         if (_fontText != null) {
             dc.drawText(
                 w / 2,
-                (h * 69) / 100,
+                (h * 67) / 100,
                 _fontText,
                 dateStr,
                 Graphics.TEXT_JUSTIFY_CENTER
